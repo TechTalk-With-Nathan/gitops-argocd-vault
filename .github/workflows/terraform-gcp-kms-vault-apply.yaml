@@ -1,0 +1,59 @@
+name: GCP bucket for Terraform state
+
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  # pull-requests: write
+defaults:
+  run:
+    working-directory: ./terraform/gcp-kms-vault
+env:
+  TF_LOG: INFO
+  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
+  TF_VAR_project_id: ${{ secrets.GCP_PROJECT }}
+  TF_VAR_location: global
+  TF_VAR_key_ring_name: ${{ secrets.TF_KEY_RING_NAME }}
+  TF_VAR_crypto_key_name: ${{ secrets.TF_CRYPTO_KEY_NAME }}
+  TF_VAR_service_account_name: ${{ secrets.TF_SERVICE_ACCOUNT_NAME }}
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+      
+    # Setup gcloud CLI
+    - uses: 'google-github-actions/auth@v3'
+      name: "Authenticate to Google Cloud"
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ secrets.GCP_PROJECT }}
+
+ #   Create KMS KEY for vault
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.9.8 # or whatever you use
+
+    - name: Terraform init
+      id: terraform-init
+      run: |
+        terraform init -backend-config="bucket=$BUCKET_TF_STATE"
+
+    - name: Terraform format
+      id: fmt
+      run: terraform fmt -check -diff -recursive
+    
+    - name: Terraform validate
+      id: validate
+      run: terraform validate
+
+    - name: Terraform plan
+      run: |
+        terraform plan -out=tfplan
+    - name: Terraform apply
+      run: |
+        terraform apply -auto-approve -input=false tfplan
