@@ -1,0 +1,5 @@
+apiVersion: v2
+name: certificates-app
+version: 0.1.0
+appVersion: "1.0"
+description: A Helm chart for managing TLS certificates with cert-manager

@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: certificates
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - app: hello-world
+            namespace: default
+            hostname: hello-world.example.com
+            tlsSecretName: hello-world-local-tls
+            issuerKind: ClusterIssuer
+            issuerName: example-local-ca
+
+          - app: vault
+            namespace: vault
+            hostname: vault.example.com
+            tlsSecretName: vault-tls
+            issuerKind: ClusterIssuer
+            issuerName: example-local-ca
+  template:
+    metadata:
+      name: cert-{{.app}}
+      annotations:
+        argocd.argoproj.io/sync-wave: "20"
+    spec:
+      project: platform
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      source:
+        repoURL: https://github.com/TechTalk-With-Nathan/gitops-argocd-vault.git
+        targetRevision: main
+        path: charts/certificates-app
+        helm:
+          values: |
+            app: {{.app}}
+            namespace: {{.namespace}}
+            hostname: {{.hostname}}
+            tlsSecretName: {{.tlsSecretName}}
+            issuer:
+              kind: {{.issuerKind}}
+              name: {{.issuerName}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

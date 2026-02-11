@@ -1,0 +1,21 @@
+  apiVersion: argoproj.io/v1alpha1
+  kind: AppProject
+  metadata:
+    name: platform
+    namespace: argocd
+  spec:
+    description: "Platform add-ons managed by Argo CD ApplicationSet"
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+    destinations:
+    - namespace: '*'
+      server: '*'
+    sourceRepos:
+    - "https://github.com/TechTalk-With-Nathan/gitops-argocd-vault.git"
+
+    # External Helm chart repositories
+    - "https://helm.cilium.io"
+    - "https://charts.jetstack.io"
+    - "https://helm.releases.hashicorp.com"
+    - "https://charts.bitnami.com/bitnami"

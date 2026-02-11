@@ -1,0 +1,7 @@
+app: hello-world
+namespace: default
+hostname: hello-world.example.com
+tlsSecretName: hello-world-local-tls
+issuer:
+  kind: ClusterIssuer
+  name: example-local-ca

@@ -1,0 +1,7 @@
+app: hello-world
+hostname: hello-world.example.com
+tlsSecretName: hello-world-local-tls
+gatewayClassName: cilium
+backend:
+  service: hello-world-app
+  port: 80

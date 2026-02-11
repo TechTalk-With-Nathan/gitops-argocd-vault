@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-helm
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - name: cilium
+            namespace: cilium
+            repoURL: https://helm.cilium.io
+            chart: cilium
+            version: 1.18.6
+            valuesPath: bootstrap/platform/cilium/values.yaml
+
+          - name: cert-manager
+            namespace: cert-manager
+            repoURL: https://charts.jetstack.io
+            chart: cert-manager
+            version: v1.19.2
+            valuesPath: bootstrap/platform/cert-manager/values.yaml
+
+          - name: vault
+            namespace: vault
+            repoURL: https://helm.releases.hashicorp.com
+            chart: vault
+            version: 0.28.0
+            valuesPath: bootstrap/platform/vault/values.yaml
+
+  template:
+    metadata:
+      name: "{{.name}}"
+      labels:
+        app.kubernetes.io/part-of: platform
+      annotations:
+        argocd.argoproj.io/sync-wave: "5"
+    spec:
+      project: platform
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+
+      sources:
+        - repoURL: "{{.repoURL}}"
+          chart: "{{.chart}}"
+          targetRevision: "{{.version}}"
+          helm:
+            valueFiles:
+              - $values/{{.valuesPath}}
+        - repoURL: "https://github.com/TechTalk-With-Nathan/gitops-argocd-vault.git"
+          targetRevision: main
+          ref: values
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

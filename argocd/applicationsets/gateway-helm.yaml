@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gateway-helm
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - app: hello-world
+            namespace: default
+            hostname: hello-world.example.com
+            tlsSecretName: hello-world-local-tls
+            backendService: hello-world-app
+            backendPort: 80
+
+          - app: vault
+            namespace: vault
+            hostname: vault.example.com
+            tlsSecretName: vault-tls
+            backendService: vault-ui
+            backendPort: 8200
+
+  template:
+    metadata:
+      name: gw-{{.app}}
+      annotations:
+        argocd.argoproj.io/sync-wave: "30"
+    spec:
+      project: platform
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      source:
+        repoURL: https://github.com/TechTalk-With-Nathan/gitops-argocd-vault.git
+        targetRevision: main
+        path: charts/gateway-app
+        helm:
+          values: |
+            app: {{.app}}
+            hostname: {{.hostname}}
+            tlsSecretName: {{.tlsSecretName}}
+            gatewayClassName: cilium
+            backend:
+              service: {{.backendService}}
+              port: {{.backendPort}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - Validate=true
