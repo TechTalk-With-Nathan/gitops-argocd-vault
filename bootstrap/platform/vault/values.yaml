@@ -1,5 +1,9 @@
 server:
   affinity: ""
+  extraVolumes:
+    - type: secret
+      name: vault-gcp-kms-creds
+      path: /vault/userconfig
   dataStorage:
     enabled: true
     size: 2Gi
@@ -19,6 +23,13 @@ server:
         }
         storage "raft" {
           path = "/vault/data"
+        }
+        seal "gcpckms" {
+          project     = "terraform-project-480611"
+          region      = "global"
+          key_ring    = "vault-key-ring"
+          crypto_key  = "vault-crypto-key"
+          credentials = "/vault/userconfig/vault-gcp-kms-creds/sa.json"
         }
         telemetry {
           prometheus_retention_time = "30s"
