@@ -4,9 +4,9 @@ server:
       requiredDuringSchedulingIgnoredDuringExecution:
         - labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ template "vault.name" . }}-agent-injector
+              app.kubernetes.io/name: {{ template "vault.name" . }}
               app.kubernetes.io/instance: "{{ .Release.Name }}"
-              component: webhook
+              component: server
           topologyKey: kubernetes.io/hostname
   extraVolumes:
     - type: secret
