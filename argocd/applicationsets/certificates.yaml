@@ -21,6 +21,13 @@ spec:
             tlsSecretName: vault-tls
             issuerKind: ClusterIssuer
             issuerName: example-local-ca
+
+          - app: postgresql
+            namespace: postgresql
+            hostname: postgresql.example.com
+            tlsSecretName: postgresql-tls
+            issuerKind: ClusterIssuer
+            issuerName: example-local-ca
   template:
     metadata:
       name: cert-{{.app}}
