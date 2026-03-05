@@ -29,6 +29,13 @@ spec:
             version: 0.28.0
             valuesPath: bootstrap/platform/vault/values.yaml
 
+          - name: postgresql
+            namespace: postgresql
+            repoURL: oci://registry-1.docker.io/bitnamicharts/postgresql
+            chart: postgresql
+            version: 0.28.0
+            valuesPath: bootstrap/platform/postgresql/values.yaml
+
   template:
     metadata:
       name: "{{.name}}"
