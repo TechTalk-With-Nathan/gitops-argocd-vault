@@ -199,3 +199,23 @@ vault write database/roles/readonly \
 vault read database/creds/readonly
 
 ```
+## Verify the configuration
+
+```bash
+export VAULT_ADDR=https://vault.example.com
+export VAULT_TOKEN=$(k -n vault get secrets vault-root-token -o jsonpath='{.data.token}' | base64 -d)
+CREDS=$(vault read -format=json database/creds/readonly) && echo "$CREDS"
+```
+
+
+## Test the dynamic credentials
+
+```bash
+k -n postgresql exec -it postgresql-0 -c postgresql -- bash -lc "psql -h postgresql.postgresql.svc.cluster.local -p 5432 -U $(echo $CREDS | jq -r .data.username) postgres"
+
+```
+## Revoke the lease
+
+```bash
+vault lease revoke -prefix database/creds/readonly
+```
