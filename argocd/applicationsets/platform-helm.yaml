@@ -33,7 +33,7 @@ spec:
             namespace: postgresql
             repoURL: oci://registry-1.docker.io/bitnamicharts/postgresql
             chart: postgresql
-            version: 0.28.0
+            version: 18.4.0
             valuesPath: bootstrap/platform/postgresql/values.yaml
 
   template:
