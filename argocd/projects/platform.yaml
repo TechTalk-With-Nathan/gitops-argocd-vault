@@ -19,3 +19,4 @@
     - "https://charts.jetstack.io"
     - "https://helm.releases.hashicorp.com"
     - "https://charts.bitnami.com/bitnami"
+    - "oci://registry-1.docker.io/bitnamicharts/postgresql"

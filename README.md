@@ -25,6 +25,13 @@ This setup reflects a **production-grade Vault deployment**  and is suitable for
 - Google Cloud KMS enabled
 - GitHub repository with Actions enabled
 
+### for minikube
+
+```bash
+minikube start --driver=docker --cni=cilium --nodes 3
+
+```
+
 ---
 
 ## 🔐 GitHub Actions Secrets
@@ -144,3 +151,51 @@ vault write auth/kubernetes/role/app \
 * Pods using the `app` ServiceAccount in the default namespace can authenticate to Vault
 * Vault issues tokens with the `app` policy attached
 * Tokens are valid for 24 hours
+
+## Configure the database secrets engine
+
+* Enable the database secrets engine
+
+```bash
+vault secrets enable database
+
+```
+* Configure the database secrets engine with the connection credentials for the PostgreSQL database.
+
+```bash
+vault write database/config/postgres \
+     plugin_name=postgresql-database-plugin \
+     connection_url="postgresql://{{username}}:{{password}}@$POSTGRES_URL/postgres" \
+     allowed_roles=readonly \
+     username="$POSTGRES_USER" \
+     password="$POSTGRES_PASSWORD"
+```
+## Create a role : a logical name within Vault that maps to database credentials.
+
+* Define the SQL used to create credentials.
+
+```bash
+tee readonly.sql <<EOF
+CREATE ROLE "{{name}}" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}' INHERIT;
+GRANT ro TO "{{name}}";
+EOF
+```
+
+* Create the role named readonly that creates credentials with the readonly.sql.
+
+```bash
+vault write database/roles/readonly \
+      db_name=postgres \
+      creation_statements=@readonly.sql \
+      default_ttl=1h \
+      max_ttl=24h
+
+```
+ ## Request dynamic credentials
+
+* Read credentials from the readonly database role.
+
+```bash
+vault read database/creds/readonly
+
+```
